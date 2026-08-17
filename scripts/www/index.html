@@ -1,0 +1,1671 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>洛克王国异色记录工具</title>
+    <style>
+        :root {
+            --bg: #f8f4e8;
+            --card-bg: #ffffff;
+            --primary: #f39c12;
+            --primary-dark: #e67e22;
+            --text: #2c3e50;
+            --text-light: #7f8c8d;
+            --border: #e0d8c8;
+            --shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            --shadow-hover: 0 6px 24px rgba(0, 0, 0, 0.14);
+            --danger: #e74c3c;
+            --success: #27ae60;
+            --radius: 14px;
+            --radius-sm: 8px;
+            --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding-bottom: 100px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* 顶部标题栏 */
+        .app-header {
+            background: linear-gradient(135deg, #f6d365 0%, #fda085 50%, #f39c12 100%);
+            padding: 24px 20px 20px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(243, 156, 18, 0.35);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            border-radius: 0 0 20px 20px;
+        }
+        .app-header h1 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+            letter-spacing: 2px;
+        }
+        .app-header .subtitle {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.9);
+            margin-top: 4px;
+            letter-spacing: 1px;
+        }
+
+        /* 主容器 */
+        .container {
+            max-width: 1200px;
+            margin: 20px auto 0;
+            padding: 0 16px;
+        }
+
+        /* 账号栏 */
+        .section-bar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            background: var(--card-bg);
+            padding: 12px 16px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+        .section-bar .label {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-light);
+            margin-right: 4px;
+            white-space: nowrap;
+        }
+        .account-tab,
+        .season-tab {
+            padding: 8px 18px;
+            border-radius: 20px;
+            border: 2px solid var(--border);
+            background: #fff;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text);
+            transition: var(--transition);
+            user-select: none;
+            white-space: nowrap;
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .account-tab:hover,
+        .season-tab:hover {
+            border-color: var(--primary);
+            color: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+        .account-tab.active,
+        .season-tab.active {
+            background: linear-gradient(135deg, #f6d365, #f39c12);
+            border-color: transparent;
+            color: #fff;
+            font-weight: 600;
+            box-shadow: 0 3px 12px rgba(243, 156, 18, 0.4);
+        }
+        .account-tab .edit-btn {
+            font-size: 0.75rem;
+            opacity: 0.7;
+            cursor: pointer;
+            padding: 0 2px;
+            transition: var(--transition);
+            color: inherit;
+        }
+        .account-tab .edit-btn:hover {
+            opacity: 1;
+            transform: scale(1.2);
+        }
+        .account-tab .del-btn {
+            font-size: 0.75rem;
+            opacity: 0.5;
+            cursor: pointer;
+            padding: 0 2px;
+            transition: var(--transition);
+            color: inherit;
+            margin-left: 2px;
+        }
+        .account-tab .del-btn:hover {
+            opacity: 1;
+            color: var(--danger);
+            transform: scale(1.2);
+        }
+        .add-btn {
+            padding: 8px 14px;
+            border-radius: 20px;
+            border: 2px dashed var(--border);
+            background: transparent;
+            cursor: pointer;
+            font-size: 0.85rem;
+            color: var(--text-light);
+            transition: var(--transition);
+            white-space: nowrap;
+            font-weight: 500;
+        }
+        .add-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary-dark);
+            background: #fff8f0;
+        }
+
+        /* 筛选栏 */
+        .filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 16px;
+            background: var(--card-bg);
+            padding: 12px 16px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+        .filter-btn {
+            padding: 6px 14px;
+            border-radius: 16px;
+            border: 1.5px solid var(--border);
+            background: #fff;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text);
+            transition: var(--transition);
+            user-select: none;
+            white-space: nowrap;
+        }
+        .filter-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+        .filter-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #fff;
+            font-weight: 600;
+            box-shadow: 0 2px 10px rgba(243, 156, 18, 0.35);
+        }
+        .filter-btn.egg-type {
+            font-size: 0.75rem;
+            padding: 5px 10px;
+            border-radius: 12px;
+        }
+
+        /* 统计信息 */
+        .stats-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            padding: 10px 16px;
+            background: #fffdf7;
+            border-radius: var(--radius-sm);
+            margin-bottom: 12px;
+            font-size: 0.85rem;
+            color: var(--text-light);
+            border: 1px solid #f0e8d8;
+        }
+        .stats-bar .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .stats-bar .stat-item strong {
+            color: var(--text);
+            font-size: 1rem;
+        }
+        .stats-bar .stat-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 4px;
+        }
+        .stats-bar .dot-male {
+            background: #3498db;
+        }
+        .stats-bar .dot-female {
+            background: #fd79a8;
+        }
+        .stats-bar .dot-total {
+            background: var(--primary);
+        }
+
+        /* 精灵卡片网格 */
+        .pokemon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 14px;
+            margin-top: 8px;
+        }
+        .pokemon-card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 16px;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            border: 2px solid transparent;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .pokemon-card:hover {
+            box-shadow: var(--shadow-hover);
+            transform: translateY(-3px);
+            border-color: #f0d9b8;
+        }
+        .pokemon-card .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .pokemon-card .pokemon-name {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--text);
+            letter-spacing: 0.5px;
+        }
+        .pokemon-card .type-badge {
+            font-size: 0.7rem;
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+        .type-badge.changzhu {
+            background: #d5f5e3;
+            color: #1e8449;
+        }
+        .type-badge.xianding {
+            background: #fdebd0;
+            color: #c0392b;
+        }
+        .pokemon-card .egg-groups {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .pokemon-card .egg-tag {
+            font-size: 0.72rem;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-weight: 500;
+            color: #fff;
+            letter-spacing: 0.3px;
+        }
+        .pokemon-card .gender-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            padding-top: 8px;
+            border-top: 1px solid #f0ebe0;
+        }
+        .gender-counter {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        .gender-counter .gc-label {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            font-weight: 500;
+        }
+        .gender-counter .gc-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 1.5px solid var(--border);
+            background: #fff;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+            user-select: none;
+            line-height: 1;
+        }
+        .gender-counter .gc-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary-dark);
+            background: #fff8f0;
+            transform: scale(1.1);
+        }
+        .gender-counter .gc-btn.minus:hover {
+            border-color: var(--danger);
+            color: var(--danger);
+            background: #fef5f5;
+        }
+        .gender-counter .gc-num {
+            min-width: 24px;
+            text-align: center;
+            font-size: 1rem;
+            color: var(--text);
+        }
+        .gender-counter.male .gc-num {
+            color: #2980b9;
+        }
+        .gender-counter.female .gc-num {
+            color: #e84393;
+        }
+        .pokemon-card .card-actions {
+            display: flex;
+            gap: 6px;
+            justify-content: flex-end;
+            margin-top: 4px;
+        }
+        .pokemon-card .card-actions button {
+            padding: 5px 12px;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            background: #fff;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--text-light);
+            transition: var(--transition);
+        }
+        .pokemon-card .card-actions button:hover {
+            border-color: var(--primary);
+            color: var(--primary-dark);
+        }
+        .pokemon-card .card-actions button.btn-danger:hover {
+            border-color: var(--danger);
+            color: var(--danger);
+            background: #fef5f5;
+        }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-light);
+            grid-column: 1 / -1;
+        }
+        .empty-state .empty-icon {
+            font-size: 3rem;
+            margin-bottom: 12px;
+            opacity: 0.6;
+        }
+        .empty-state p {
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* 浮动添加按钮 */
+        .fab {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f6d365, #f39c12);
+            border: none;
+            cursor: pointer;
+            font-size: 1.8rem;
+            color: #fff;
+            box-shadow: 0 6px 24px rgba(243, 156, 18, 0.45);
+            transition: var(--transition);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+        }
+        .fab:hover {
+            transform: scale(1.1) rotate(90deg);
+            box-shadow: 0 10px 32px rgba(243, 156, 18, 0.55);
+        }
+        .fab:active {
+            transform: scale(0.95);
+        }
+
+        /* 模态框 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            animation: fadeIn 0.2s ease;
+        }
+        .modal-overlay.show {
+            display: flex;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .modal {
+            background: #fff;
+            border-radius: 20px;
+            padding: 24px;
+            max-width: 650px;
+            width: 100%;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+            animation: slideUp 0.3s ease;
+        }
+        .modal h2 {
+            font-size: 1.3rem;
+            margin-bottom: 16px;
+            color: var(--text);
+            text-align: center;
+            letter-spacing: 1px;
+        }
+        .modal .form-group {
+            margin-bottom: 14px;
+        }
+        .modal .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-light);
+            margin-bottom: 6px;
+            letter-spacing: 0.5px;
+        }
+        .modal .form-group input[type="text"] {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: var(--radius-sm);
+            border: 1.5px solid var(--border);
+            font-size: 0.95rem;
+            outline: none;
+            transition: var(--transition);
+            font-family: inherit;
+        }
+        .modal .form-group input[type="text"]:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(243, 156, 18, 0.15);
+        }
+        .modal .type-selector {
+            display: flex;
+            gap: 10px;
+        }
+        .modal .type-selector button {
+            flex: 1;
+            padding: 10px;
+            border-radius: var(--radius-sm);
+            border: 2px solid var(--border);
+            background: #fff;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: var(--transition);
+            font-family: inherit;
+        }
+        .modal .type-selector button.active-changzhu {
+            border-color: #27ae60;
+            background: #d5f5e3;
+            color: #1e8449;
+            font-weight: 600;
+        }
+        .modal .type-selector button.active-xianding {
+            border-color: #e74c3c;
+            background: #fdebd0;
+            color: #c0392b;
+            font-weight: 600;
+        }
+        .modal .egg-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .modal .egg-selector .egg-option {
+            padding: 7px 14px;
+            border-radius: 16px;
+            border: 2px solid var(--border);
+            background: #fff;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text);
+            transition: var(--transition);
+            user-select: none;
+            font-family: inherit;
+        }
+        .modal .egg-selector .egg-option:hover {
+            border-color: var(--primary);
+        }
+        .modal .egg-selector .egg-option.selected {
+            border-color: var(--primary);
+            background: #fff8f0;
+            color: var(--primary-dark);
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(243, 156, 18, 0.25);
+        }
+        .modal .account-gender-table {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .modal .ag-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px;
+            background: #faf7f0;
+            border-radius: var(--radius-sm);
+            flex-wrap: wrap;
+        }
+        .modal .ag-row .ag-account-name {
+            font-weight: 600;
+            font-size: 0.85rem;
+            min-width: 60px;
+            color: var(--text);
+        }
+        .modal .ag-row .ag-gender {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.8rem;
+        }
+        .modal .ag-row .ag-gender .gc-btn {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 1.5px solid var(--border);
+            background: #fff;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+            user-select: none;
+            line-height: 1;
+        }
+        .modal .ag-row .ag-gender .gc-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary-dark);
+        }
+        .modal .ag-row .ag-gender .gc-btn.minus:hover {
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+        .modal .ag-row .ag-gender .gc-num {
+            min-width: 20px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .modal .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 18px;
+            justify-content: flex-end;
+        }
+        .modal .modal-actions button {
+            padding: 10px 20px;
+            border-radius: 20px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: var(--transition);
+            font-family: inherit;
+            letter-spacing: 0.5px;
+        }
+        .modal .modal-actions .btn-cancel {
+            background: #f0ebe0;
+            color: var(--text-light);
+        }
+        .modal .modal-actions .btn-cancel:hover {
+            background: #e5ddd0;
+        }
+        .modal .modal-actions .btn-confirm {
+            background: linear-gradient(135deg, #f6d365, #f39c12);
+            color: #fff;
+            box-shadow: 0 3px 12px rgba(243, 156, 18, 0.4);
+        }
+        .modal .modal-actions .btn-confirm:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(243, 156, 18, 0.5);
+        }
+
+        /* 确认对话框 */
+        .confirm-dialog {
+            background: #fff;
+            border-radius: 16px;
+            padding: 20px 24px;
+            max-width: 380px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+            animation: slideUp 0.25s ease;
+        }
+        .confirm-dialog p {
+            font-size: 0.95rem;
+            margin-bottom: 16px;
+            color: var(--text);
+            line-height: 1.5;
+        }
+        .confirm-dialog .confirm-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        .confirm-dialog .confirm-actions button {
+            padding: 8px 18px;
+            border-radius: 16px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: var(--transition);
+            font-family: inherit;
+        }
+        .confirm-dialog .confirm-actions .btn-yes {
+            background: var(--danger);
+            color: #fff;
+        }
+        .confirm-dialog .confirm-actions .btn-yes:hover {
+            background: #c0392b;
+        }
+        .confirm-dialog .confirm-actions .btn-no {
+            background: #f0ebe0;
+            color: var(--text-light);
+        }
+        .confirm-dialog .confirm-actions .btn-no:hover {
+            background: #e5ddd0;
+        }
+
+        /* Toast提示 */
+        .toast {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            z-index: 300;
+            opacity: 0;
+            transition: all 0.3s ease;
+            pointer-events: none;
+            letter-spacing: 0.5px;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* 响应式 */
+        @media (max-width: 600px) {
+            .app-header h1 {
+                font-size: 1.3rem;
+            }
+            .container {
+                padding: 0 10px;
+                margin-top: 12px;
+            }
+            .pokemon-grid {
+                grid-template-columns: 1fr;
+            }
+            .fab {
+                bottom: 20px;
+                right: 20px;
+                width: 48px;
+                height: 48px;
+                font-size: 1.5rem;
+            }
+            .modal {
+                padding: 16px;
+                border-radius: 16px;
+            }
+            .section-bar {
+                padding: 10px;
+                gap: 6px;
+            }
+            .account-tab,
+            .season-tab {
+                padding: 6px 12px;
+                font-size: 0.8rem;
+            }
+            .filter-bar {
+                padding: 10px;
+                gap: 4px;
+            }
+            .filter-btn {
+                font-size: 0.7rem;
+                padding: 4px 10px;
+            }
+        }
+
+        /* 滚动条美化 */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #d0c8b8;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #b8b0a0;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 顶部标题 -->
+    <header class="app-header">
+        <h1>🐾 洛克王国异色记录</h1>
+        <div class="subtitle">S1-S3 赛季异色精灵 · 多账号管理 · 蛋组筛选</div>
+    </header>
+
+    <!-- Toast提示 -->
+    <div class="toast" id="toast"></div>
+
+    <!-- 主容器 -->
+    <div class="container">
+        <!-- 账号管理栏 -->
+        <div class="section-bar" id="accountBar">
+            <span class="label">👤 账号：</span>
+            <!-- 账号标签动态生成 -->
+            <button class="add-btn" onclick="showAddAccountDialog()">+ 添加账号</button>
+        </div>
+
+        <!-- 赛季选择栏 -->
+        <div class="section-bar" id="seasonBar">
+            <span class="label">📅 赛季：</span>
+            <!-- 赛季标签动态生成 -->
+            <button class="add-btn" onclick="showAddSeasonDialog()">+ 添加赛季</button>
+        </div>
+
+        <!-- 蛋组筛选栏 -->
+        <div class="filter-bar" id="filterBar">
+            <!-- 筛选按钮动态生成 -->
+        </div>
+
+        <!-- 统计信息 -->
+        <div class="stats-bar" id="statsBar">
+            <!-- 动态生成 -->
+        </div>
+
+        <!-- 精灵卡片网格 -->
+        <div class="pokemon-grid" id="pokemonGrid">
+            <!-- 动态生成 -->
+        </div>
+    </div>
+
+    <!-- 浮动添加按钮 -->
+    <button class="fab" onclick="openAddPokemonModal()" title="添加异色精灵">+</button>
+
+    <!-- 添加/编辑精灵模态框 -->
+    <div class="modal-overlay" id="pokemonModalOverlay">
+        <div class="modal">
+            <h2 id="pokemonModalTitle">添加异色精灵</h2>
+            <div class="form-group">
+                <label>精灵名字</label>
+                <input type="text" id="pokemonNameInput" placeholder="请输入精灵名字..." maxlength="30">
+            </div>
+            <div class="form-group">
+                <label>精灵类型</label>
+                <div class="type-selector">
+                    <button id="typeBtnChangzhu" onclick="selectType('changzhu')">🌿 常驻精灵</button>
+                    <button id="typeBtnXianding" onclick="selectType('xianding')">✨ 赛季限定</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>蛋组池（最多选2个）</label>
+                <div class="egg-selector" id="eggSelector">
+                    <!-- 蛋组按钮动态生成 -->
+                </div>
+            </div>
+            <div class="form-group">
+                <label>各账号公母数量</label>
+                <div class="account-gender-table" id="accountGenderTable">
+                    <!-- 动态生成 -->
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closePokemonModal()">取消</button>
+                <button class="btn-confirm" onclick="confirmPokemonModal()">确认添加</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 确认对话框 -->
+    <div class="modal-overlay" id="confirmOverlay">
+        <div class="confirm-dialog">
+            <p id="confirmMessage">确定要执行此操作吗？</p>
+            <div class="confirm-actions">
+                <button class="btn-no" onclick="closeConfirmDialog()">取消</button>
+                <button class="btn-yes" id="confirmYesBtn">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== 常量定义 ====================
+        const EGG_GROUPS = [
+            '动物组', '拟人组', '巨灵组', '魔力组', '天空组', '两栖组', '植物组',
+            '大地组', '妖精组', '昆虫组', '软体组', '机械组', '海洋组', '飞龙组'
+        ];
+
+        const EGG_COLORS = {
+            '动物组': '#e67e22',
+            '拟人组': '#e74c3c',
+            '巨灵组': '#8e44ad',
+            '魔力组': '#9b59b6',
+            '天空组': '#3498db',
+            '两栖组': '#1abc9c',
+            '植物组': '#2ecc71',
+            '大地组': '#d35400',
+            '妖精组': '#fd79a8',
+            '昆虫组': '#a3cb38',
+            '软体组': '#b2bec3',
+            '机械组': '#636e72',
+            '海洋组': '#0984e3',
+            '飞龙组': '#d63031'
+        };
+
+        const STORAGE_KEY = 'luoke_yise_data_v1';
+        const MAX_EGG_SELECT = 2;
+
+        // ==================== 数据管理 ====================
+        let appData = null;
+        let currentAccount = '';
+        let currentSeason = '';
+        let currentFilter = 'all'; // 'all' 或 蛋组名
+        let editingPokemonId = null; // 编辑中的精灵ID
+        let selectedType = 'changzhu'; // 当前选中的类型
+        let selectedEggGroups = []; // 模态框中选中的蛋组
+        let modalGenderData = {}; // 模态框中各账号的公母数据
+        let confirmCallback = null; // 确认对话框回调
+
+        function getDefaultData() {
+            return {
+                accounts: ['主号', '小号'],
+                seasons: ['S1', 'S2', 'S3'],
+                pokemons: {
+                    // 'S1': { 'uuid': { name, type, eggGroups, accountData: { '账号名': { male, female } } } }
+                }
+            };
+        }
+
+        function loadData() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    // 基本验证
+                    if (parsed && parsed.accounts && Array.isArray(parsed.accounts) &&
+                        parsed.seasons && Array.isArray(parsed.seasons) &&
+                        parsed.pokemons && typeof parsed.pokemons === 'object') {
+                        appData = parsed;
+                        // 确保所有赛季存在pokemons对象
+                        appData.seasons.forEach(s => {
+                            if (!appData.pokemons[s]) appData.pokemons[s] = {};
+                        });
+                        // 确保所有账号在所有精灵中都有数据
+                        normalizeData();
+                        return;
+                    }
+                }
+            } catch (e) {
+                console.error('加载数据失败，使用默认数据', e);
+            }
+            appData = getDefaultData();
+            appData.seasons.forEach(s => {
+                appData.pokemons[s] = {};
+            });
+            saveData();
+        }
+
+        function normalizeData() {
+            // 确保每个赛季的每个精灵的每个账号都有数据
+            appData.seasons.forEach(season => {
+                const pokemons = appData.pokemons[season] || {};
+                Object.values(pokemons).forEach(p => {
+                    if (!p.accountData) p.accountData = {};
+                    appData.accounts.forEach(acc => {
+                        if (!p.accountData[acc]) {
+                            p.accountData[acc] = { male: 0, female: 0 };
+                        }
+                        if (typeof p.accountData[acc].male !== 'number') p.accountData[acc].male = 0;
+                        if (typeof p.accountData[acc].female !== 'number') p.accountData[acc].female = 0;
+                    });
+                    if (!p.eggGroups) p.eggGroups = [];
+                    if (!p.type) p.type = 'changzhu';
+                    if (!p.name) p.name = '未命名';
+                });
+                appData.pokemons[season] = pokemons;
+            });
+            // 确保当前账号和赛季有效
+            if (!appData.accounts.includes(currentAccount)) {
+                currentAccount = appData.accounts[0] || '';
+            }
+            if (!appData.seasons.includes(currentSeason)) {
+                currentSeason = appData.seasons[0] || '';
+            }
+        }
+
+        function saveData() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+            } catch (e) {
+                console.error('保存数据失败', e);
+                showToast('⚠️ 数据保存失败，请检查浏览器存储空间');
+            }
+        }
+
+        // ==================== 工具函数 ====================
+        function generateId() {
+            return Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            clearTimeout(toast._timeout);
+            toast._timeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+
+        function getCurrentPokemons() {
+            if (!appData || !currentSeason) return {};
+            return appData.pokemons[currentSeason] || {};
+        }
+
+        function getFilteredPokemons() {
+            const all = getCurrentPokemons();
+            const result = {};
+            Object.entries(all).forEach(([id, p]) => {
+                if (currentFilter === 'all') {
+                    result[id] = p;
+                } else {
+                    if (p.eggGroups && p.eggGroups.includes(currentFilter)) {
+                        result[id] = p;
+                    }
+                }
+            });
+            return result;
+        }
+
+        function getAccountGender(pokemon, account) {
+            if (!pokemon.accountData || !pokemon.accountData[account]) {
+                return { male: 0, female: 0 };
+            }
+            return pokemon.accountData[account];
+        }
+
+        function setAccountGender(pokemon, account, male, female) {
+            if (!pokemon.accountData) pokemon.accountData = {};
+            if (!pokemon.accountData[account]) pokemon.accountData[account] = { male: 0, female: 0 };
+            pokemon.accountData[account].male = Math.max(0, male);
+            pokemon.accountData[account].female = Math.max(0, female);
+        }
+
+        // ==================== 渲染函数 ====================
+        function renderAccountBar() {
+            const bar = document.getElementById('accountBar');
+            // 清空但保留添加按钮
+            const addBtn = bar.querySelector('.add-btn');
+            bar.innerHTML = '<span class="label">👤 账号：</span>';
+            appData.accounts.forEach(acc => {
+                const tab = document.createElement('button');
+                tab.className = 'account-tab' + (acc === currentAccount ? ' active' : '');
+                tab.innerHTML = `${acc} <span class="edit-btn" title="重命名账号" onclick="event.stopPropagation();renameAccount('${acc}')">✏️</span>` +
+                    (appData.accounts.length > 1 ?
+                        `<span class="del-btn" title="删除账号" onclick="event.stopPropagation();deleteAccount('${acc}')">×</span>` :
+                        '');
+                tab.onclick = () => switchAccount(acc);
+                bar.appendChild(tab);
+            });
+            bar.appendChild(addBtn);
+        }
+
+        function renderSeasonBar() {
+            const bar = document.getElementById('seasonBar');
+            const addBtn = bar.querySelector('.add-btn');
+            bar.innerHTML = '<span class="label">📅 赛季：</span>';
+            appData.seasons.forEach(season => {
+                const tab = document.createElement('button');
+                tab.className = 'season-tab' + (season === currentSeason ? ' active' : '');
+                tab.textContent = season;
+                tab.onclick = () => switchSeason(season);
+                bar.appendChild(tab);
+            });
+            bar.appendChild(addBtn);
+        }
+
+        function renderFilterBar() {
+            const bar = document.getElementById('filterBar');
+            bar.innerHTML = '';
+            // 全部按钮
+            const allBtn = document.createElement('button');
+            allBtn.className = 'filter-btn' + (currentFilter === 'all' ? ' active' : '');
+            allBtn.textContent = '🌐 全部';
+            allBtn.onclick = () => setFilter('all');
+            bar.appendChild(allBtn);
+            // 蛋组按钮
+            EGG_GROUPS.forEach(egg => {
+                const btn = document.createElement('button');
+                btn.className = 'filter-btn egg-type' + (currentFilter === egg ? ' active' : '');
+                btn.textContent = egg;
+                btn.style.borderColor = EGG_COLORS[egg] + '88';
+                btn.style.color = currentFilter === egg ? '#fff' : EGG_COLORS[egg];
+                if (currentFilter === egg) {
+                    btn.style.background = EGG_COLORS[egg];
+                    btn.style.borderColor = EGG_COLORS[egg];
+                }
+                btn.onclick = () => setFilter(egg);
+                bar.appendChild(btn);
+            });
+        }
+
+        function renderStats() {
+            const bar = document.getElementById('statsBar');
+            const filtered = getFilteredPokemons();
+            const pokemonList = Object.values(filtered);
+            let totalMale = 0,
+                totalFemale = 0;
+            pokemonList.forEach(p => {
+                const g = getAccountGender(p, currentAccount);
+                totalMale += g.male;
+                totalFemale += g.female;
+            });
+            bar.innerHTML = `
+                <span class="stat-item">📊 共 <strong>${pokemonList.length}</strong> 种异色精灵</span>
+                <span class="stat-item"><span class="stat-dot dot-male"></span>公: <strong>${totalMale}</strong></span>
+                <span class="stat-item"><span class="stat-dot dot-female"></span>母: <strong>${totalFemale}</strong></span>
+                <span class="stat-item"><span class="stat-dot dot-total"></span>合计: <strong>${totalMale + totalFemale}</strong></span>
+                <span class="stat-item" style="margin-left:auto;font-size:0.75rem;color:#bbb;">当前账号: ${currentAccount} | 赛季: ${currentSeason}</span>
+            `;
+        }
+
+        function renderPokemonGrid() {
+            const grid = document.getElementById('pokemonGrid');
+            const filtered = getFilteredPokemons();
+            const ids = Object.keys(filtered);
+            grid.innerHTML = '';
+
+            if (ids.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">🐣</div>
+                        <p>${currentFilter === 'all' ? '当前赛季还没有记录异色精灵' : `没有蛋组为「${currentFilter}」的精灵`}</p>
+                        <p style="font-size:0.8rem;color:#bbb;">点击右下角 + 按钮添加</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // 按名字排序
+            ids.sort((a, b) => {
+                const nameA = filtered[a].name || '';
+                const nameB = filtered[b].name || '';
+                return nameA.localeCompare(nameB, 'zh-CN');
+            });
+
+            ids.forEach(id => {
+                const p = filtered[id];
+                const gender = getAccountGender(p, currentAccount);
+                const card = document.createElement('div');
+                card.className = 'pokemon-card';
+
+                const typeBadgeClass = p.type === 'xianding' ? 'xianding' : 'changzhu';
+                const typeBadgeText = p.type === 'xianding' ? '✨ 限定' : '🌿 常驻';
+
+                const eggTags = (p.eggGroups || []).map(egg => {
+                    const color = EGG_COLORS[egg] || '#999';
+                    return `<span class="egg-tag" style="background:${color}">${egg}</span>`;
+                }).join('');
+
+                card.innerHTML = `
+                    <div class="card-header">
+                        <span class="pokemon-name">${p.name || '未命名'}</span>
+                        <span class="type-badge ${typeBadgeClass}">${typeBadgeText}</span>
+                    </div>
+                    <div class="egg-groups">${eggTags || '<span style="font-size:0.7rem;color:#ccc;">无蛋组</span>'}</div>
+                    <div class="gender-row">
+                        <div class="gender-counter male">
+                            <span class="gc-label">♂公</span>
+                            <button class="gc-btn minus" onclick="quickGenderChange('${id}','male',-1)" title="减少公">−</button>
+                            <span class="gc-num">${gender.male}</span>
+                            <button class="gc-btn" onclick="quickGenderChange('${id}','male',1)" title="增加公">+</button>
+                        </div>
+                        <div class="gender-counter female">
+                            <span class="gc-label">♀母</span>
+                            <button class="gc-btn minus" onclick="quickGenderChange('${id}','female',-1)" title="减少母">−</button>
+                            <span class="gc-num">${gender.female}</span>
+                            <button class="gc-btn" onclick="quickGenderChange('${id}','female',1)" title="增加母">+</button>
+                        </div>
+                    </div>
+                    <div class="card-actions">
+                        <button onclick="editPokemon('${id}')">✏️ 编辑</button>
+                        <button class="btn-danger" onclick="deletePokemon('${id}')">🗑️ 删除</button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function renderAll() {
+            renderAccountBar();
+            renderSeasonBar();
+            renderFilterBar();
+            renderStats();
+            renderPokemonGrid();
+        }
+
+        // ==================== 交互函数 ====================
+        function switchAccount(account) {
+            currentAccount = account;
+            saveData();
+            renderAll();
+        }
+
+        function switchSeason(season) {
+            currentSeason = season;
+            saveData();
+            renderAll();
+        }
+
+        function setFilter(filter) {
+            currentFilter = filter;
+            renderFilterBar();
+            renderStats();
+            renderPokemonGrid();
+        }
+
+        function quickGenderChange(pokemonId, genderType, delta) {
+            const pokemons = getCurrentPokemons();
+            const p = pokemons[pokemonId];
+            if (!p) return;
+            const g = getAccountGender(p, currentAccount);
+            if (genderType === 'male') {
+                setAccountGender(p, currentAccount, g.male + delta, g.female);
+            } else {
+                setAccountGender(p, currentAccount, g.male, g.female + delta);
+            }
+            saveData();
+            renderStats();
+            renderPokemonGrid();
+        }
+
+        // ==================== 账号管理 ====================
+        function showAddAccountDialog() {
+            const name = prompt('请输入新账号名称：');
+            if (!name || !name.trim()) return;
+            const trimmed = name.trim();
+            if (appData.accounts.includes(trimmed)) {
+                showToast('⚠️ 该账号名已存在');
+                return;
+            }
+            appData.accounts.push(trimmed);
+            // 为所有精灵初始化该账号数据
+            appData.seasons.forEach(season => {
+                const pokemons = appData.pokemons[season] || {};
+                Object.values(pokemons).forEach(p => {
+                    if (!p.accountData) p.accountData = {};
+                    p.accountData[trimmed] = { male: 0, female: 0 };
+                });
+            });
+            if (!currentAccount) currentAccount = trimmed;
+            saveData();
+            renderAll();
+            showToast(`✅ 账号「${trimmed}」已添加`);
+        }
+
+        function renameAccount(account) {
+            const newName = prompt(`重命名账号「${account}」为：`, account);
+            if (!newName || !newName.trim() || newName.trim() === account) return;
+            const trimmed = newName.trim();
+            if (appData.accounts.includes(trimmed)) {
+                showToast('⚠️ 该账号名已存在');
+                return;
+            }
+            const idx = appData.accounts.indexOf(account);
+            appData.accounts[idx] = trimmed;
+            // 更新所有精灵的accountData
+            appData.seasons.forEach(season => {
+                const pokemons = appData.pokemons[season] || {};
+                Object.values(pokemons).forEach(p => {
+                    if (p.accountData && p.accountData[account]) {
+                        p.accountData[trimmed] = p.accountData[account];
+                        delete p.accountData[account];
+                    }
+                });
+            });
+            if (currentAccount === account) currentAccount = trimmed;
+            saveData();
+            renderAll();
+            showToast(`✅ 账号已重命名为「${trimmed}」`);
+        }
+
+        function deleteAccount(account) {
+            if (appData.accounts.length <= 1) {
+                showToast('⚠️ 至少需要保留一个账号');
+                return;
+            }
+            showConfirm(`确定要删除账号「${account}」吗？该账号的所有数据将被清除！`, () => {
+                const idx = appData.accounts.indexOf(account);
+                if (idx > -1) appData.accounts.splice(idx, 1);
+                // 从所有精灵中删除该账号数据
+                appData.seasons.forEach(season => {
+                    const pokemons = appData.pokemons[season] || {};
+                    Object.values(pokemons).forEach(p => {
+                        if (p.accountData && p.accountData[account]) {
+                            delete p.accountData[account];
+                        }
+                    });
+                });
+                if (currentAccount === account) currentAccount = appData.accounts[0] || '';
+                saveData();
+                renderAll();
+                showToast(`🗑️ 账号「${account}」已删除`);
+            });
+        }
+
+        // ==================== 赛季管理 ====================
+        function showAddSeasonDialog() {
+            const name = prompt('请输入新赛季名称（如 S4）：');
+            if (!name || !name.trim()) return;
+            const trimmed = name.trim().toUpperCase();
+            if (appData.seasons.includes(trimmed)) {
+                showToast('⚠️ 该赛季已存在');
+                return;
+            }
+            appData.seasons.push(trimmed);
+            appData.pokemons[trimmed] = {};
+            if (!currentSeason) currentSeason = trimmed;
+            saveData();
+            renderAll();
+            showToast(`✅ 赛季「${trimmed}」已添加`);
+        }
+
+        // ==================== 精灵添加/编辑 ====================
+        function openAddPokemonModal() {
+            editingPokemonId = null;
+            document.getElementById('pokemonModalTitle').textContent = '添加异色精灵';
+            document.getElementById('pokemonNameInput').value = '';
+            selectedType = 'changzhu';
+            updateTypeButtons();
+            selectedEggGroups = [];
+            renderEggSelector();
+            // 初始化模态框性别数据
+            modalGenderData = {};
+            appData.accounts.forEach(acc => {
+                modalGenderData[acc] = { male: 0, female: 0 };
+            });
+            renderModalAccountTable();
+            document.getElementById('pokemonModalOverlay').classList.add('show');
+            document.getElementById('pokemonNameInput').focus();
+        }
+
+        function editPokemon(pokemonId) {
+            const pokemons = getCurrentPokemons();
+            const p = pokemons[pokemonId];
+            if (!p) return;
+            editingPokemonId = pokemonId;
+            document.getElementById('pokemonModalTitle').textContent = '编辑异色精灵';
+            document.getElementById('pokemonNameInput').value = p.name || '';
+            selectedType = p.type || 'changzhu';
+            updateTypeButtons();
+            selectedEggGroups = [...(p.eggGroups || [])];
+            renderEggSelector();
+            modalGenderData = {};
+            appData.accounts.forEach(acc => {
+                const g = getAccountGender(p, acc);
+                modalGenderData[acc] = { male: g.male, female: g.female };
+            });
+            renderModalAccountTable();
+            document.getElementById('pokemonModalOverlay').classList.add('show');
+        }
+
+        function closePokemonModal() {
+            document.getElementById('pokemonModalOverlay').classList.remove('show');
+            editingPokemonId = null;
+        }
+
+        function selectType(type) {
+            selectedType = type;
+            updateTypeButtons();
+        }
+
+        function updateTypeButtons() {
+            const btnC = document.getElementById('typeBtnChangzhu');
+            const btnX = document.getElementById('typeBtnXianding');
+            btnC.className = selectedType === 'changzhu' ? 'active-changzhu' : '';
+            btnX.className = selectedType === 'xianding' ? 'active-xianding' : '';
+        }
+
+        function renderEggSelector() {
+            const container = document.getElementById('eggSelector');
+            container.innerHTML = '';
+            EGG_GROUPS.forEach(egg => {
+                const btn = document.createElement('button');
+                btn.className = 'egg-option' + (selectedEggGroups.includes(egg) ? ' selected' : '');
+                btn.textContent = egg;
+                btn.style.borderColor = selectedEggGroups.includes(egg) ? EGG_COLORS[egg] : '';
+                btn.style.background = selectedEggGroups.includes(egg) ? EGG_COLORS[egg] + '22' : '';
+                btn.onclick = () => toggleEggSelection(egg);
+                container.appendChild(btn);
+            });
+        }
+
+        function toggleEggSelection(egg) {
+            const idx = selectedEggGroups.indexOf(egg);
+            if (idx > -1) {
+                selectedEggGroups.splice(idx, 1);
+            } else {
+                if (selectedEggGroups.length >= MAX_EGG_SELECT) {
+                    showToast(`⚠️ 最多选择 ${MAX_EGG_SELECT} 个蛋组`);
+                    return;
+                }
+                selectedEggGroups.push(egg);
+            }
+            renderEggSelector();
+        }
+
+        function renderModalAccountTable() {
+            const container = document.getElementById('accountGenderTable');
+            container.innerHTML = '';
+            appData.accounts.forEach(acc => {
+                const g = modalGenderData[acc] || { male: 0, female: 0 };
+                const row = document.createElement('div');
+                row.className = 'ag-row';
+                row.innerHTML = `
+                    <span class="ag-account-name">${acc}</span>
+                    <div class="ag-gender">
+                        <span>♂公</span>
+                        <button class="gc-btn minus" onclick="modalGenderChange('${acc}','male',-1)">−</button>
+                        <span class="gc-num">${g.male}</span>
+                        <button class="gc-btn" onclick="modalGenderChange('${acc}','male',1)">+</button>
+                    </div>
+                    <div class="ag-gender">
+                        <span>♀母</span>
+                        <button class="gc-btn minus" onclick="modalGenderChange('${acc}','female',-1)">−</button>
+                        <span class="gc-num">${g.female}</span>
+                        <button class="gc-btn" onclick="modalGenderChange('${acc}','female',1)">+</button>
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        function modalGenderChange(account, genderType, delta) {
+            if (!modalGenderData[account]) {
+                modalGenderData[account] = { male: 0, female: 0 };
+            }
+            if (genderType === 'male') {
+                modalGenderData[account].male = Math.max(0, modalGenderData[account].male + delta);
+            } else {
+                modalGenderData[account].female = Math.max(0, modalGenderData[account].female + delta);
+            }
+            renderModalAccountTable();
+        }
+
+        function confirmPokemonModal() {
+            const nameInput = document.getElementById('pokemonNameInput');
+            const name = nameInput.value.trim();
+            if (!name) {
+                showToast('⚠️ 请输入精灵名字');
+                nameInput.focus();
+                return;
+            }
+            if (selectedEggGroups.length === 0) {
+                showToast('⚠️ 请至少选择1个蛋组');
+                return;
+            }
+
+            const pokemons = getCurrentPokemons();
+            const season = currentSeason;
+
+            if (editingPokemonId) {
+                // 编辑模式
+                const p = pokemons[editingPokemonId];
+                if (!p) {
+                    showToast('⚠️ 精灵不存在');
+                    closePokemonModal();
+                    return;
+                }
+                p.name = name;
+                p.type = selectedType;
+                p.eggGroups = [...selectedEggGroups];
+                // 更新各账号数据
+                appData.accounts.forEach(acc => {
+                    const g = modalGenderData[acc] || { male: 0, female: 0 };
+                    setAccountGender(p, acc, g.male, g.female);
+                });
+                saveData();
+                closePokemonModal();
+                renderAll();
+                showToast(`✅ 精灵「${name}」已更新`);
+            } else {
+                // 添加模式 - 检查是否已存在同名精灵
+                let existingId = null;
+                Object.entries(pokemons).forEach(([id, p]) => {
+                    if (p.name === name) {
+                        existingId = id;
+                    }
+                });
+
+                if (existingId) {
+                    // 同名精灵存在，合并数据
+                    showConfirm(`精灵「${name}」已存在，是否将新数据合并到该精灵？`, () => {
+                        const p = pokemons[existingId];
+                        // 合并蛋组（取并集）
+                        const mergedEggs = new Set([...(p.eggGroups || []), ...selectedEggGroups]);
+                        p.eggGroups = Array.from(mergedEggs).slice(0, MAX_EGG_SELECT);
+                        // 合并公母数量
+                        appData.accounts.forEach(acc => {
+                            const g = modalGenderData[acc] || { male: 0, female: 0 };
+                            const existing = getAccountGender(p, acc);
+                            setAccountGender(p, acc, existing.male + g.male, existing.female + g.female);
+                        });
+                        saveData();
+                        closePokemonModal();
+                        renderAll();
+                        showToast(`✅ 已合并到「${name}」`);
+                    });
+                } else {
+                    // 创建新精灵
+                    const newId = generateId();
+                    const newPokemon = {
+                        id: newId,
+                        name: name,
+                        type: selectedType,
+                        eggGroups: [...selectedEggGroups],
+                        accountData: {}
+                    };
+                    appData.accounts.forEach(acc => {
+                        const g = modalGenderData[acc] || { male: 0, female: 0 };
+                        newPokemon.accountData[acc] = { male: g.male, female: g.female };
+                    });
+                    pokemons[newId] = newPokemon;
+                    appData.pokemons[season] = pokemons;
+                    saveData();
+                    closePokemonModal();
+                    renderAll();
+                    showToast(`✅ 精灵「${name}」已添加`);
+                }
+            }
+        }
+
+        function deletePokemon(pokemonId) {
+            const pokemons = getCurrentPokemons();
+            const p = pokemons[pokemonId];
+            if (!p) return;
+            showConfirm(`确定要删除精灵「${p.name}」吗？该操作不可撤销！`, () => {
+                delete pokemons[pokemonId];
+                appData.pokemons[currentSeason] = pokemons;
+                saveData();
+                renderAll();
+                showToast(`🗑️ 精灵「${p.name}」已删除`);
+            });
+        }
+
+        // ==================== 确认对话框 ====================
+        function showConfirm(message, callback) {
+            document.getElementById('confirmMessage').textContent = message;
+            confirmCallback = callback;
+            document.getElementById('confirmOverlay').classList.add('show');
+        }
+
+        function closeConfirmDialog() {
+            document.getElementById('confirmOverlay').classList.remove('show');
+            confirmCallback = null;
+        }
+
+        document.getElementById('confirmYesBtn').addEventListener('click', () => {
+            if (confirmCallback) {
+                confirmCallback();
+            }
+            closeConfirmDialog();
+        });
+
+        // 点击遮罩关闭确认框
+        document.getElementById('confirmOverlay').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('confirmOverlay')) {
+                closeConfirmDialog();
+            }
+        });
+
+        // 点击遮罩关闭精灵模态框
+        document.getElementById('pokemonModalOverlay').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('pokemonModalOverlay')) {
+                closePokemonModal();
+            }
+        });
+
+        // ESC键关闭模态框
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (document.getElementById('pokemonModalOverlay').classList.contains('show')) {
+                    closePokemonModal();
+                }
+                if (document.getElementById('confirmOverlay').classList.contains('show')) {
+                    closeConfirmDialog();
+                }
+            }
+        });
+
+        // ==================== 导出/导入数据 ====================
+        function exportData() {
+            const dataStr = JSON.stringify(appData, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `洛克王国异色数据_${new Date().toLocaleDateString()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('📦 数据已导出');
+        }
+
+        function importData(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data && data.accounts && data.seasons && data.pokemons) {
+                        appData = data;
+                        normalizeData();
+                        if (!appData.accounts.includes(currentAccount)) {
+                            currentAccount = appData.accounts[0] || '';
+                        }
+                        if (!appData.seasons.includes(currentSeason)) {
+                            currentSeason = appData.seasons[0] || '';
+                        }
+                        saveData();
+                        renderAll();
+                        showToast('✅ 数据导入成功');
+                    } else {
+                        showToast('⚠️ 数据格式不正确');
+                    }
+                } catch (err) {
+                    showToast('⚠️ 导入失败，文件格式错误');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // ==================== 初始化 ====================
+        function init() {
+            loadData();
+            // 设置默认当前账号和赛季
+            if (!currentAccount && appData.accounts.length > 0) {
+                currentAccount = appData.accounts[0];
+            }
+            if (!currentSeason && appData.seasons.length > 0) {
+                currentSeason = appData.seasons[0];
+            }
+            renderAll();
+
+            // 在页面底部添加导出导入按钮
+            const container = document.querySelector('.container');
+            const exportBar = document.createElement('div');
+            exportBar.style.cssText = 'margin-top:16px;text-align:center;gap:10px;display:flex;justify-content:center;flex-wrap:wrap;';
+            exportBar.innerHTML = `
+                <button onclick="exportData()" style="padding:8px 16px;border-radius:16px;border:1.5px solid #ccc;background:#fff;cursor:pointer;font-size:0.8rem;color:#666;transition:all 0.2s;">📦 导出数据</button>
+                <label style="padding:8px 16px;border-radius:16px;border:1.5px solid #ccc;background:#fff;cursor:pointer;font-size:0.8rem;color:#666;transition:all 0.2s;">📥 导入数据
+                    <input type="file" accept=".json" style="display:none;" onchange="importData(this.files[0])">
+                </label>
+            `;
+            container.appendChild(exportBar);
+        }
+
+        // 启动应用
+        init();
+    </script>
+</body>
+</html>
